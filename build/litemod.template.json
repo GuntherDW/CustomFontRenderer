@@ -1,0 +1,8 @@
+{
+    "name": "CustomFontRenderer",
+    "mcversion": "${litemodversion}",
+    "version": "${version}",
+    "revision": "${build.number}",
+    "author": "${author}",
+    "description": "Custom Chat renderer with pretty fonts!\n\nWARNING:Higly experimental code!"
+}
