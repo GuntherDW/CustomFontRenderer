@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="CustomFontRenderer" basedir="." default="rebuild">
 
-	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="../../LiteLoader/ant/tasks/ant-contrib.jar"/>
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="lib/ant-contrib.jar"/>
 	
     <!-- Versions !!IMPORTANT -->
 	<property name="version" value="1.0" />
