@@ -54,6 +54,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter {
                 System.out.println("Replacing chat UI!");
                 recreateChatWindow();
                 replacedChat = true;
+                addChat("CustomFontRenderer version "+getVersion()+" loaded. Type /cf help for help!");
             }
         }
     }

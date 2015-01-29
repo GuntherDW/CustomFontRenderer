@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.UnicodeFont;
@@ -328,6 +329,12 @@ public class CustomFont {
         try { font_toDraw.loadGlyphs(); } catch (Exception e) {}
     }
 
+    public int getAlpha() {
+        float chatOpacity = this.mcInstance.gameSettings.chatOpacity * 0.9F + 0.1F;
+
+        return (int) (chatOpacity * 255.0D);
+    }
+
     public int renderString(UnicodeFont font, FontRenderer fontRenderer, String text, int x, int y, int color, boolean shadow) {
         if (shadow) {
             color = (color & 16579836) >> 2 | color & -16777216;
@@ -486,7 +493,7 @@ public class CustomFont {
     }
 
     public Color getSlickColorFromRGB(int color) {
-        return new Color(color);
+        return new Color(color + (getAlpha() << 24));
     }
 
     public void setupOverlayRendering() {
@@ -509,6 +516,10 @@ public class CustomFont {
         GlStateManager.translate(0.0F, 0.0F, -2000F);
     }
 
+    public float getChatScale() {
+        return this.mcInstance.gameSettings.chatScale;
+    }
+
     /**
      * Push the render pipeline onto the screen all at once
      */
@@ -516,6 +527,8 @@ public class CustomFont {
         if(customStringList.isEmpty()) return;
         setupOverlayRendering();
         GlStateManager.translate(2.0F * scaledResolution.getScaleFactor(), mcInstance.displayHeight - (CustomFontChatGui.startHeight * scaledResolution.getScaleFactor()), 0.0F);
+        float chatScale = getChatScale();
+        GlStateManager.scale(chatScale, chatScale, 1.0F);
         GlStateManager.enableBlend();
 
         for(CustomString cs : customStringList) {
