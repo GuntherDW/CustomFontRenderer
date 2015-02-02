@@ -143,6 +143,8 @@ public class CustomFontChatGui extends GuiNewChat {
                     }
                 }
 
+                if(customChat)
+                    customFont.pushRenderPipeline(scaledResolution);
 
                 if (isChatOpen) {
                     int fontHeight = customChat ? customFont.getFontHeight() / scaledResolution.getScaleFactor() : this.mc.fontRendererObj.FONT_HEIGHT;
@@ -161,9 +163,6 @@ public class CustomFontChatGui extends GuiNewChat {
                         // PrivateFieldsCustomFont.inputField.get((GuiChat) mc.currentScreen).setText("sp : "+scrollPos+" v19 : "+var19+" v13 : "+var13+" v4 : "+amountOfShownLines+" v9: "+fontHeight);
                     }
                 }
-
-                if(customChat)
-                    customFont.pushRenderPipeline(scaledResolution);
 
                 GlStateManager.popMatrix();
             }

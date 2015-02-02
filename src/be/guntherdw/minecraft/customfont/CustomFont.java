@@ -161,16 +161,6 @@ public class CustomFont {
         this.drawString(mcInstance.fontRendererObj, text, x, y, color, false);
     }
 
-    public void resetMinecraftScale(ScaledResolution sr) {
-        // GL11.glOrtho(0.0D, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight(), 0.0D, 1000D, 3000D);
-        GlStateManager.ortho(0.0D, sr.getScaledWidth(), sr.getScaledHeight(), 0.0D, 1000D, 3000D);
-    }
-
-    public void setupCustomScale(ScaledResolution sr) {
-        // GL11.glOrtho(0.0D, mcInstance.displayWidth, mcInstance.displayHeight, 0.0D, 1000D, 3000D);
-        GlStateManager.ortho(0.0D, mcInstance.displayWidth, mcInstance.displayHeight, 0.0D, 1000D, 3000D);
-    }
-
     public void drawString(String text, int x, int y, int color) {
         FontRenderer fontRenderer = mcInstance.fontRendererObj;
         this.drawString(fontRenderer, text, x, y, color, false);
@@ -271,6 +261,7 @@ public class CustomFont {
                             GlStateManager.disableBlend();
                             int hy = y + (font_toDraw.getLineHeight()/2);
                             this.drawRect(ox, hy, x, hy + 2, addAlpha(color, 255));
+                            GlStateManager.resetColor(); // Slick doesn't handle our colors!
                             GlStateManager.enableBlend();
                             // disableDefaults();
                         }
@@ -278,6 +269,7 @@ public class CustomFont {
                         if (underlineStyle) {
                             GlStateManager.disableBlend();
                             this.drawRect(ox, y + font_toDraw.getLineHeight(), x, y + font_toDraw.getLineHeight() - 2, addAlpha(color, 255));
+                            GlStateManager.resetColor(); // Slick doesn't handle our colors!
                             GlStateManager.enableBlend();
                         }
                     }
@@ -494,24 +486,16 @@ public class CustomFont {
         return new Color(color + (getAlpha() << 24));
     }
 
-    public void setupOverlayRendering() {
-        GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);
-        GlStateManager.loadIdentity();
-        GlStateManager.ortho(0.0D, mcInstance.displayWidth, mcInstance.displayHeight, 0.0D, 1000D, 3000D);
-        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-        GlStateManager.loadIdentity();
-        GlStateManager.translate(0.0F, 0.0F, -2000F);
+    public void setupOverlayRendering(ScaledResolution scaledResolution) {
+        int sf = scaledResolution.getScaleFactor();
+        float scale = 1.0F / sf;
+        GlStateManager.scale(scale, scale, scale);
     }
 
     public void resetMinecraftRendering(ScaledResolution scaledResolution) {
-        GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);
-        GlStateManager.loadIdentity();
-        GlStateManager.ortho(0.0D, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight(), 0.0D, 1000D, 3000D);
-        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-        GlStateManager.loadIdentity();
-        GlStateManager.translate(0.0F, 0.0F, -2000F);
+        int sf = scaledResolution.getScaleFactor();
+        float scale = 1.0F * sf;
+        GlStateManager.scale(scale, scale, scale);
     }
 
     public float getChatScale() {
@@ -523,11 +507,17 @@ public class CustomFont {
      */
     public void pushRenderPipeline(ScaledResolution scaledResolution) {
         if(customStringList.isEmpty()) return;
-        setupOverlayRendering();
-        GlStateManager.translate(2.0F * scaledResolution.getScaleFactor(), mcInstance.displayHeight - (CustomFontChatGui.startHeight * scaledResolution.getScaleFactor()), 0.0F);
+
+        setupOverlayRendering(scaledResolution);
+
+        GlStateManager.translate(1.0F * scaledResolution.getScaleFactor(), -1.0F * scaledResolution.getScaleFactor(), 0.0F);
         float chatScale = getChatScale();
-        GlStateManager.scale(chatScale, chatScale, 1.0F);
+        GlStateManager.scale(chatScale, chatScale, chatScale);
+
         GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+
+        GlStateManager.disableTexture2D();
 
         for(CustomString cs : customStringList) {
             if(cs.hasShadow())
@@ -536,10 +526,11 @@ public class CustomFont {
                 this.drawString(cs.getChatString(), cs.getX(), cs.getY(), cs.getColor());
         }
 
-        GlStateManager.resetColor(); // Slick doesn't integrate with our GlStateManager!
-        GlStateManager.disableAlpha();
-        GlStateManager.disableBlend();
-        resetMinecraftRendering(new ScaledResolution(mcInstance, mcInstance.displayWidth, mcInstance.displayHeight));
+
+        GlStateManager.resetColor();   // Slick doesn't integrate with our GlStateManager!
+        GlStateManager.bindTexture(0); // Slick doesn't integrate with our GlStateManager!
+
+        resetMinecraftRendering(scaledResolution);
 
         /**
          * Reset the pipeline for the next frame

@@ -2,12 +2,14 @@ package be.guntherdw.minecraft.customfont;
 
 import com.mumfrey.liteloader.OutboundChatFilter;
 import com.mumfrey.liteloader.Tickable;
+import com.mumfrey.liteloader.ViewportListener;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.util.ChatUtilities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiNewChat;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 
@@ -18,7 +20,7 @@ import java.util.List;
 /**
  * @author GuntherDW
  */
-public class LiteModCustomFont implements Tickable, OutboundChatFilter {
+public class LiteModCustomFont implements Tickable, OutboundChatFilter, ViewportListener {
 
     private Minecraft minecraft;
 
@@ -180,7 +182,6 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter {
         if (minecraft != null && minecraft.ingameGUI.getChatGUI() != null) {
             minecraft.ingameGUI.getChatGUI().printChatMessage(ChatUtilities.convertLegacyCodes(new ChatComponentText("[CFR] §6" + message)));
         }
-
     }
 
     /**
@@ -325,5 +326,15 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter {
         for(String s : sentMessages)
             chatGui.addToSentMessages(s);
 
+    }
+
+    @Override
+    public void onViewportResized(ScaledResolution resolution, int displayWidth, int displayHeight) {
+        recreateChatWindow();
+    }
+
+    @Override
+    public void onFullScreenToggled(boolean fullScreen) {
+        recreateChatWindow();
     }
 }
