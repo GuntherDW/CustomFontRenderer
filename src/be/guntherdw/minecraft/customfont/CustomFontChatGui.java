@@ -215,7 +215,6 @@ public class CustomFontChatGui extends GuiNewChat {
         ChatComponentText var6 = new ChatComponentText("");
         List<IChatComponent> var7 = Lists.newArrayList();
         List<IChatComponent> var8 = Lists.newArrayList(chatComponent);
-        maxWidth *= scaledResolution.getScaleFactor();
         // TODO : Get the colors that were unsolved on the last line and re-apply
 
         for (int var9 = 0; var9 < var8.size(); ++var9) {
@@ -299,19 +298,17 @@ public class CustomFontChatGui extends GuiNewChat {
             received_lines.add(p_146237_1_);
         }
 
-        ScaledResolution scaledResolution = new ScaledResolution(mc, mc.displayHeight, mc.displayWidth);
-        // System.out.println("Adding to received_lines!");
-
+        ScaledResolution scaledResolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         List<IChatComponent> var6;
-        int var5 = MathHelper.floor_float((float) this.getChatWidth() / this.getChatScale());
+
+        int var5 = MathHelper.floor_float((float) this.getChatWidth() / getChatScale());
 
         if (customChat) {
-            var6 = getChatComponents(scaledResolution, p_146237_1_, var5, this.mc.fontRendererObj, false, false);
+            var6 = getChatComponents(scaledResolution, p_146237_1_, var5*scaledResolution.getScaleFactor(), this.mc.fontRendererObj, false, false);
         } else {
             var6 = GuiUtilRenderComponents.func_178908_a(p_146237_1_, var5, this.mc.fontRendererObj, false, false);
         }
 
-        // List var6 = GuiUtilRenderComponents.func_178908_a(p_146237_1_, var5, this.mc.fontRendererObj, false, false);
         boolean var7 = this.getChatOpen();
         IChatComponent var9;
 
@@ -550,8 +547,6 @@ public class CustomFontChatGui extends GuiNewChat {
     }
 
     public static int calculateChatboxHeight(float p_146243_0_) {
-        /* int var1 =  180;
-        byte var2 = 20; */
         int var1 = LiteModCustomFont.amtOfLines * 9;
         int var2 = LiteModCustomFont.amtOfLines;
 
@@ -560,9 +555,6 @@ public class CustomFontChatGui extends GuiNewChat {
 
     @Override
     public int getLineCount() {
-        /* System.out.println("result : "+this.getChatHeight() / 9);
-        return this.getChatHeight() / 9; */
-        // return LiteModCustomFont.amtOfLines;
         return this.getChatHeight() / 9;
     }
 }
