@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
+import sun.awt.resources.awt;
 import sun.font.Font2D;
 import sun.font.Font2DHandle;
 import sun.font.PhysicalFont;
@@ -43,29 +44,28 @@ public class CustomFont {
         if(mcInstance == null)
             mcInstance = Minecraft.getMinecraft();
 
-        font = new UnicodeFont(new Font(fontName, Font.TRUETYPE_FONT, size));
+        java.awt.Font awtFont = new Font(fontName, Font.PLAIN, size);
+
+        font = new UnicodeFont(awtFont, size, false, false);
         font.addAsciiGlyphs();
         font.getEffects().add(new ColorEffect(java.awt.Color.WHITE));
         try { font.loadGlyphs(); } catch(Exception ex) {}
 
-        font_italic = new UnicodeFont(new Font(fontName, Font.ITALIC, size));
+        font_italic = new UnicodeFont(awtFont, size, false, true);
         font_italic.addAsciiGlyphs();
         font_italic.getEffects().add(new ColorEffect(java.awt.Color.WHITE));
         try { font_italic.loadGlyphs(); } catch(Exception ex) {}
 
-        font_bold = new UnicodeFont(new Font(fontName, Font.BOLD, size + 2));
+        font_bold = new UnicodeFont(awtFont, size, true, false);
         font_bold.addAsciiGlyphs();
         font_bold.getEffects().add(new ColorEffect(java.awt.Color.WHITE));
         try { font_bold.loadGlyphs(); } catch(Exception ex) {}
 
-        font_italic_bold = new UnicodeFont(new Font(fontName, Font.BOLD | Font.ITALIC, size + 2));
+        font_italic_bold = new UnicodeFont(awtFont, size, true, true);
         font_italic_bold.addAsciiGlyphs();
         font_italic_bold.getEffects().add(new ColorEffect(java.awt.Color.WHITE));
         try { font_italic_bold.loadGlyphs(); } catch(Exception ex) {}
 
-        if(fontName.contains("bold")) {
-            font = font_bold;
-        }
         font_toDraw = font;
     }
 
@@ -261,7 +261,6 @@ public class CustomFont {
                             GlStateManager.disableBlend();
                             int hy = y + (font_toDraw.getLineHeight()/2);
                             this.drawRect(ox, hy, x, hy + 2, addAlpha(color, 255));
-                            GlStateManager.resetColor(); // Slick doesn't handle our colors!
                             GlStateManager.enableBlend();
                             // disableDefaults();
                         }
@@ -269,7 +268,6 @@ public class CustomFont {
                         if (underlineStyle) {
                             GlStateManager.disableBlend();
                             this.drawRect(ox, y + font_toDraw.getLineHeight(), x, y + font_toDraw.getLineHeight() - 2, addAlpha(color, 255));
-                            GlStateManager.resetColor(); // Slick doesn't handle our colors!
                             GlStateManager.enableBlend();
                         }
                     }
@@ -515,9 +513,7 @@ public class CustomFont {
         GlStateManager.scale(chatScale, chatScale, chatScale);
 
         GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-
-        GlStateManager.disableTexture2D();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         for(CustomString cs : customStringList) {
             if(cs.hasShadow())
@@ -527,8 +523,8 @@ public class CustomFont {
         }
 
 
-        GlStateManager.resetColor();   // Slick doesn't integrate with our GlStateManager!
         GlStateManager.bindTexture(0); // Slick doesn't integrate with our GlStateManager!
+        GlStateManager.resetColor();   // Slick doesn't integrate with our GlStateManager!
 
         resetMinecraftRendering(scaledResolution);
 
