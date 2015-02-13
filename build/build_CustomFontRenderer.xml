@@ -149,10 +149,15 @@
         </concat>
 
         <!-- Stage selected classes from the build/runtime dependencies in mcp/lib/. -->
-        <unzip src="${mcp.dir}/lib/slick.jar"
-               dest="${stage.dir}">
+        <unzip src="${mcp.dir}/lib/slick.jar" dest="${stage.dir}">
             <patternset>
                 <include name="org/**"/>
+            </patternset>
+        </unzip>
+
+        <unzip src="${mcp.dir}/lib/jfontchooser-1.0.5.jar" dest="${stage.dir}">
+            <patternset>
+                <include name="say/**" />
             </patternset>
         </unzip>
 

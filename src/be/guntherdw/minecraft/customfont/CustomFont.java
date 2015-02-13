@@ -39,12 +39,12 @@ public class CustomFont {
 
     private static Minecraft mcInstance = null;
 
-    public CustomFont(String fontName, int size) {
+    public CustomFont(Font awtFont) {
 
         if(mcInstance == null)
             mcInstance = Minecraft.getMinecraft();
 
-        java.awt.Font awtFont = new Font(fontName, Font.PLAIN, size);
+        int size = awtFont.getSize();
 
         font = new UnicodeFont(awtFont, size, false, false);
         font.addAsciiGlyphs();
@@ -67,6 +67,11 @@ public class CustomFont {
         try { font_italic_bold.loadGlyphs(); } catch(Exception ex) {}
 
         font_toDraw = font;
+
+    }
+
+    public CustomFont(String fontName, int size) {
+        this(new Font(fontName, Font.PLAIN, size));
     }
 
     public UnicodeFont getFont() {

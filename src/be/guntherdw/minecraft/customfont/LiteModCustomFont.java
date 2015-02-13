@@ -13,6 +13,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +24,11 @@ import java.util.List;
 public class LiteModCustomFont implements Tickable, OutboundChatFilter, ViewportListener {
 
     private Minecraft minecraft;
+    public static LiteModCustomFont instance;
 
-    private CustomFont customFont;
-    private String fontName = "Verdana bold";
-    private int fontSize = 16;
+    protected CustomFont customFont;
+    protected String fontName = "Verdana bold";
+    protected int fontSize = 16;
 
     public static byte amtOfLines = 20;
     public static byte maxWidth = 40;
@@ -34,8 +36,12 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
     private CustomFontChatGui chatGui;
 
     private boolean replacedChat = false;
+    protected boolean replaceFont = false;
+    protected Font toReplaceFont = null;
 
     private File configPath;
+
+    private CustomFontSelectionDialog customFontSelectionDialog = new CustomFontSelectionDialog();
 
 
     /**
@@ -49,6 +55,18 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
     @Override
     public void onTick(Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
         if(!inGame) return;
+        if(replaceFont) {
+            replaceFont = false;
+            this.customFont = new CustomFont(toReplaceFont);
+
+            fontName = toReplaceFont.getFontName();
+            fontSize = toReplaceFont.getSize();
+            recreateChatWindow();
+            addChat("Font set to " + customFont.getFontName() + " (size:"+fontSize+") (file: "+customFont.getFontFile()+")!");
+            saveSettings(configPath);
+            toReplaceFont = null;
+        }
+
         // Check if the chatUI is ours, if not, replace
         if(!replacedChat) {
             GuiIngame ingameGUI = minecraft.ingameGUI;
@@ -72,6 +90,11 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
         String build = LiteLoader.getInstance().getModMetaData(this, "revision", "");
 
         return version + (!(build.equals("")) ? " (build: " + build + ")" : "");
+    }
+
+    protected void setFont(Font font) {
+        this.toReplaceFont = font;
+        this.replaceFont = true;
     }
 
     public void saveSettings(File configPath) {
@@ -154,6 +177,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
             // customFont = new CustomFont("Verdana bold", 16);
         }
         minecraft = Minecraft.getMinecraft();
+        instance = this;
     }
 
     /**
@@ -178,7 +202,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
         return "Custom Font Renderer";
     }
 
-    private void addChat(String message) {
+    protected void addChat(String message) {
         if (minecraft != null && minecraft.ingameGUI.getChatGUI() != null) {
             minecraft.ingameGUI.getChatGUI().printChatMessage(ChatUtilities.convertLegacyCodes(new ChatComponentText("[CFR] §6" + message)));
         }
@@ -241,7 +265,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
                         addChat("Current max lines : "+LiteModCustomFont.amtOfLines);
                     }
                 } else if (command.equalsIgnoreCase("width")) {
-                    if(args.length > 2) {
+                    if (args.length > 2) {
                         try {
                             Integer maxWidth = Integer.parseInt(args[2]);
                             LiteModCustomFont.maxWidth = maxWidth.byteValue();
@@ -252,8 +276,10 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
                             addChat("Not a number!");
                         }
                     } else {
-                        addChat("Current max width : "+LiteModCustomFont.maxWidth);
+                        addChat("Current max width : " + LiteModCustomFont.maxWidth);
                     }
+                } else if(command.equalsIgnoreCase("select")) {
+                    customFontSelectionDialog.showFontSelectorDialog();
                 } else if(command.equalsIgnoreCase("replace")) {
                     GuiIngame ingameGUI = minecraft.ingameGUI;
                     chatGui = new CustomFontChatGui(minecraft, customFont);
@@ -284,6 +310,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
                     addChat("---------------");
                     addChat("");
                     addChat("/cf toggle : Toggle between custom chat and vanilla.");
+                    addChat("/cf select : Select the font using a Font Selector window.");
                     addChat("/cf font [fontname]: Use this font to draw chat.");
                     addChat("/cf size [size]: Set this font size for chat.");
                     addChat("/cf lines [lines]: Set the max amount of drawable lines in chat.");
