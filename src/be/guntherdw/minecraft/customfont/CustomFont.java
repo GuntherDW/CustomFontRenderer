@@ -520,7 +520,7 @@ public class CustomFont {
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         for(CustomString cs : customStringList) {
-            if(cs.getChatString() == null || cs.getChatString().trim().equals("")) continue;
+            if(cs.getChatString() == null || EnumChatFormatting.getTextWithoutFormattingCodes(cs.getChatString()).trim().equals("")) continue;
 
             if(cs.hasShadow())
                 this.drawStringWithShadow(scaledResolution, cs.getChatString(), cs.getX(), cs.getY(), cs.getColor());
