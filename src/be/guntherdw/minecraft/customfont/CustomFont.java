@@ -11,7 +11,6 @@ import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
-import sun.awt.resources.awt;
 import sun.font.Font2D;
 import sun.font.Font2DHandle;
 import sun.font.PhysicalFont;
@@ -521,6 +520,8 @@ public class CustomFont {
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         for(CustomString cs : customStringList) {
+            if(cs.getChatString() == null || cs.getChatString().trim().equals("")) continue;
+
             if(cs.hasShadow())
                 this.drawStringWithShadow(scaledResolution, cs.getChatString(), cs.getX(), cs.getY(), cs.getColor());
             else
