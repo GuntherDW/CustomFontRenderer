@@ -1,14 +1,19 @@
 package be.guntherdw.minecraft.customfont;
 
 import com.google.common.collect.Lists;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.ChatLine;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiNewChat;
+import net.minecraft.client.gui.GuiUtilRenderComponents;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,7 +33,7 @@ public class CustomFontChatGui extends GuiNewChat {
      * Chat lines to be displayed in the chat box
      */
     private final List<ChatLine> chatLines = Lists.newArrayList();
-    private final List<IChatComponent> received_lines = Lists.newArrayList();
+    private final List<ITextComponent> received_lines = Lists.newArrayList();
     private final List<ChatLine> field_146253_i = Lists.newArrayList();
 
     private int scrollPos;
@@ -54,9 +59,9 @@ public class CustomFontChatGui extends GuiNewChat {
         this.customChat = true;
     }
 
-    public void redrawChat(IChatComponent[] components) {
+    public void redrawChat(TextComponentString[] components) {
         // int id = 1;
-        for(IChatComponent component : components) {
+        for(TextComponentString component : components) {
             this.addToReceivedLinesWithoutLog(component);
             // id++;
         }
@@ -75,7 +80,7 @@ public class CustomFontChatGui extends GuiNewChat {
             int chatLinesSize = this.field_146253_i.size();
             float chatOpacity = this.mc.gameSettings.chatOpacity * 0.9F + 0.1F;
 
-            ScaledResolution scaledResolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+            ScaledResolution scaledResolution = new ScaledResolution(mc);
             int sf = scaledResolution.getScaleFactor();
 
             if (chatLinesSize > 0) {
@@ -184,7 +189,7 @@ public class CustomFontChatGui extends GuiNewChat {
     }
 
     @Override
-    public void printChatMessage(IChatComponent p_146227_1_) {
+    public void printChatMessage(ITextComponent p_146227_1_) {
         this.printChatMessageWithOptionalDeletion(p_146227_1_, 0);
     }
 
@@ -192,34 +197,34 @@ public class CustomFontChatGui extends GuiNewChat {
      * prints the ChatComponent to Chat. If the ID is not 0, deletes an existing Chat Line of that ID from the GUI
      */
     @Override
-    public void printChatMessageWithOptionalDeletion(IChatComponent p_146234_1_, int p_146234_2_) {
+    public void printChatMessageWithOptionalDeletion(ITextComponent p_146234_1_, int p_146234_2_) {
         this.setChatLine(p_146234_1_, p_146234_2_, this.mc.ingameGUI.getUpdateCounter(), false);
         logger.info("[CHAT] " + p_146234_1_.getUnformattedText());
         // logger.info("[CHAT] " + p_146234_1_.getFormattedText());
     }
 
-    public void addToReceivedLinesWithoutLog(IChatComponent chatComponent) {
+    public void addToReceivedLinesWithoutLog(ITextComponent chatComponent) {
         this.setChatLine(chatComponent, 0, this.mc.ingameGUI.getUpdateCounter(), false);
     }
 
     public static String removeFormattingCodes(String string) {
-        return EnumChatFormatting.getTextWithoutFormattingCodes(string);
+        return ChatFormatting.stripFormatting(string);
     }
 
-    public static String func_178909_a(String p_178909_0_, boolean p_178909_1_) {
-        return !p_178909_1_ && !Minecraft.getMinecraft().gameSettings.chatColours ? EnumChatFormatting.getTextWithoutFormattingCodes(p_178909_0_) : p_178909_0_;
+    public static String removeTextColorsIfConfigured(String p_178909_0_, boolean p_178909_1_) {
+        return !p_178909_1_ && !Minecraft.getMinecraft().gameSettings.chatColours ? ChatFormatting.stripFormatting(p_178909_0_) : p_178909_0_;
     }
 
-    public List<IChatComponent> getChatComponents(ScaledResolution scaledResolution, IChatComponent chatComponent, int maxWidth, FontRenderer fontRenderer, boolean p_178908_3_, boolean p_178908_4_) {
+    public List<ITextComponent> getChatComponents(ScaledResolution scaledResolution, ITextComponent chatComponent, int maxWidth, FontRenderer fontRenderer, boolean p_178908_3_, boolean p_178908_4_) {
         int var5 = 0;
-        ChatComponentText var6 = new ChatComponentText("");
-        List<IChatComponent> var7 = Lists.newArrayList();
-        List<IChatComponent> var8 = Lists.newArrayList(chatComponent);
+        ITextComponent var6 = new TextComponentString("");
+        List<ITextComponent> var7 = Lists.newArrayList();
+        List<ITextComponent> var8 = Lists.newArrayList(chatComponent);
         // TODO : Get the colors that were unsolved on the last line and re-apply
 
         for (int var9 = 0; var9 < var8.size(); ++var9) {
-            IChatComponent var10 = var8.get(var9);
-            String var11 = var10.getUnformattedTextForChat();
+            TextComponentString var10 = (TextComponentString) var8.get(var9);
+            String var11 = var10.getUnformattedComponentText();
             boolean var12 = false;
             String var14;
 
@@ -227,20 +232,20 @@ public class CustomFontChatGui extends GuiNewChat {
                 int var13 = var11.indexOf(10);
                 var14 = var11.substring(var13 + 1);
                 var11 = var11.substring(0, var13 + 1);
-                ChatComponentText var15 = new ChatComponentText(var14);
-                var15.setChatStyle(var10.getChatStyle().createShallowCopy());
+                TextComponentString var15 = new TextComponentString(var14);
+                var15.setStyle(var10.getStyle().createShallowCopy());
                 var8.add(var9 + 1, var15);
                 var12 = true;
             }
 
-            String var21 = func_178909_a(var10.getChatStyle().getFormattingCode() + var11, p_178908_4_);
+            String var21 = removeTextColorsIfConfigured(var10.getStyle().getFormattingCode() + var11, p_178908_4_);
             var14 = var21.endsWith("\n") ? var21.substring(0, var21.length() - 1) : var21;
 
 
             int var22 = customFont.getStringWidth(var14);
 
-            ChatComponentText var16 = new ChatComponentText(var14);
-            var16.setChatStyle(var10.getChatStyle().createShallowCopy());
+            TextComponentString var16 = new TextComponentString(var14);
+            var16.setStyle(var10.getStyle().createShallowCopy());
 
             if (var5 + var22 > maxWidth) {
                 String var17 = customFont.trimStringToWidth(var21, maxWidth - var5, false);
@@ -262,14 +267,14 @@ public class CustomFontChatGui extends GuiNewChat {
                         var18 = var21;
                     }
 
-                    ChatComponentText var20 = new ChatComponentText(var18);
-                    var20.setChatStyle(var10.getChatStyle().createShallowCopy());
+                    TextComponentString var20 = new TextComponentString(var18);
+                    var20.setStyle(var10.getStyle().createShallowCopy());
                     var8.add(var9 + 1, var20);
                 }
 
                 var22 = fontRenderer.getStringWidth(var17);
-                var16 = new ChatComponentText(var17);
-                var16.setChatStyle(var10.getChatStyle().createShallowCopy());
+                var16 = new TextComponentString(var17);
+                var16.setStyle(var10.getStyle().createShallowCopy());
                 var12 = true;
             }
 
@@ -283,7 +288,7 @@ public class CustomFontChatGui extends GuiNewChat {
             if (var12) {
                 var7.add(var6);
                 var5 = 0;
-                var6 = new ChatComponentText("");
+                var6 = new TextComponentString("");
             }
         }
 
@@ -291,29 +296,29 @@ public class CustomFontChatGui extends GuiNewChat {
         return var7;
     }
 
-    private void setChatLine(IChatComponent p_146237_1_, int p_146237_2_, int p_146237_3_, boolean p_146237_4_) {
+    private void setChatLine(ITextComponent p_146237_1_, int p_146237_2_, int p_146237_3_, boolean p_146237_4_) {
         if (p_146237_2_ != 0) {
             this.deleteChatLine(p_146237_2_);
         } else {
             received_lines.add(p_146237_1_);
         }
 
-        ScaledResolution scaledResolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
-        List<IChatComponent> var6;
+        ScaledResolution scaledResolution = new ScaledResolution(mc);
+        List<ITextComponent> var6;
 
         int var5 = MathHelper.floor_float((float) this.getChatWidth() / getChatScale());
 
         if (customChat) {
             var6 = getChatComponents(scaledResolution, p_146237_1_, var5*scaledResolution.getScaleFactor(), this.mc.fontRendererObj, false, false);
         } else {
-            var6 = GuiUtilRenderComponents.func_178908_a(p_146237_1_, var5, this.mc.fontRendererObj, false, false);
+            var6 = GuiUtilRenderComponents.splitText(p_146237_1_, var5, this.mc.fontRendererObj, false, false);
         }
 
         boolean var7 = this.getChatOpen();
-        IChatComponent var9;
+        TextComponentString var9;
 
         for (Iterator var8 = var6.iterator(); var8.hasNext(); this.field_146253_i.add(0, new ChatLine(p_146237_3_, var9, p_146237_2_))) {
-            var9 = (IChatComponent) var8.next();
+            var9 = (TextComponentString) var8.next();
 
             if (var7 && this.scrollPos > 0) {
                 this.isScrolled = true;
@@ -393,11 +398,11 @@ public class CustomFontChatGui extends GuiNewChat {
      * Gets the chat component under the mouse
      */
     @Override
-    public IChatComponent getChatComponent(int x, int y) {
+    public TextComponentString getChatComponent(int x, int y) {
         if (!this.getChatOpen()) {
             return null;
         } else {
-            ScaledResolution scaledResolution = new ScaledResolution(this.mc, this.mc.displayWidth, this.mc.displayHeight);
+            ScaledResolution scaledResolution = new ScaledResolution(this.mc);
             int scaleFactor = scaledResolution.getScaleFactor();
             float chatScale = this.getChatScale();
 
@@ -419,10 +424,10 @@ public class CustomFontChatGui extends GuiNewChat {
                             Iterator var12 = var10.getChatComponent().iterator();
 
                             while (var12.hasNext()) {
-                                IChatComponent var13 = (IChatComponent) var12.next();
+                                TextComponentString var13 = (TextComponentString) var12.next();
 
-                                if (var13 instanceof ChatComponentText) {
-                                    var11 += customFont.getStringWidth(removeFormattingCodes(((ChatComponentText) var13).getChatComponentText_TextValue()));
+                                if (var13 instanceof TextComponentString) {
+                                    var11 += customFont.getStringWidth(removeFormattingCodes(((TextComponentString) var13).getUnformattedComponentText()));
 
                                     if (var11 > var6) {
                                         // PrivateFieldsCustomFont.inputField.get((GuiChat) mc.currentScreen).setText("var9 : "+var9+" x : "+x+" y : "+y+EnumChatFormatting.getTextWithoutFormattingCodes(var13.getFormattedText()));
@@ -459,10 +464,10 @@ public class CustomFontChatGui extends GuiNewChat {
                             Iterator var12 = var10.getChatComponent().iterator();
 
                             while (var12.hasNext()) {
-                                IChatComponent var13 = (IChatComponent) var12.next();
+                                TextComponentString var13 = (TextComponentString) var12.next();
 
-                                if (var13 instanceof ChatComponentText) {
-                                    var11 += this.mc.fontRendererObj.getStringWidth(GuiUtilRenderComponents.func_178909_a(((ChatComponentText) var13).getChatComponentText_TextValue(), false));
+                                if (var13 instanceof TextComponentString) {
+                                    var11 += this.mc.fontRendererObj.getStringWidth(GuiUtilRenderComponents.removeTextColorsIfConfigured(((TextComponentString) var13).getUnformattedComponentText(), false));
 
                                     if (var11 > var6) {
                                         return var13;
@@ -490,7 +495,7 @@ public class CustomFontChatGui extends GuiNewChat {
         return this.mc.currentScreen instanceof GuiChat;
     }
 
-    public List<IChatComponent> getReceived_lines() {
+    public List<ITextComponent> getReceived_lines() {
         return received_lines;
     }
 

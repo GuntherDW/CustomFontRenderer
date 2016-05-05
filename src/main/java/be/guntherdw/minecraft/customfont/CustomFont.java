@@ -1,16 +1,16 @@
 package be.guntherdw.minecraft.customfont;
 
+import be.guntherdw.minecraft.customfont.font.ColorEffect;
+import be.guntherdw.minecraft.customfont.font.UnicodeFont;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
-import org.newdawn.slick.Color;
-import org.newdawn.slick.UnicodeFont;
-import org.newdawn.slick.font.effects.ColorEffect;
 import sun.font.Font2D;
 import sun.font.Font2DHandle;
 import sun.font.PhysicalFont;
@@ -128,20 +128,20 @@ public class CustomFont {
         }
 
         float alpha = (float) (color >> 24 & 255) / 255.0F;
-        float blue = (float) (color >> 16 & 255) / 255.0F;
-        float green = (float) (color >> 8 & 255) / 255.0F;
-        float red = (float) (color & 255) / 255.0F;
+        float blue =  (float) (color >> 16 & 255) / 255.0F;
+        float green = (float) (color >> 8  & 255) / 255.0F;
+        float red =   (float) (color       & 255) / 255.0F;
         Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldRenderer = tessellator.getWorldRenderer();
+        VertexBuffer vb = tessellator.getBuffer();
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GlStateManager.color(red, green, blue, alpha);
-        worldRenderer.startDrawingQuads();
-        worldRenderer.addVertex((double) left, (double) bottom, 0.0D);
-        worldRenderer.addVertex((double) right, (double) bottom, 0.0D);
-        worldRenderer.addVertex((double) right, (double) top, 0.0D);
-        worldRenderer.addVertex((double) left, (double) top, 0.0D);
+        vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+        vb.pos((double) left,  (double) bottom, 0.0D).endVertex();
+        vb.pos((double) right, (double) bottom, 0.0D).endVertex();
+        vb.pos((double) right, (double) top,    0.0D).endVertex();
+        vb.pos((double) left,  (double) top,    0.0D).endVertex();
         tessellator.draw();
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
@@ -292,8 +292,8 @@ public class CustomFont {
 
     public int addAlpha(int var0, int var1) {
         int var2 = var0 >> 16 & 255;
-        int var3 = var0 >> 8 & 255;
-        int var4 = var0 & 255;
+        int var3 = var0 >> 8  & 255;
+        int var4 = var0       & 255;
         return gethex(var2, var3, var4, var1);
     }
 
@@ -340,7 +340,7 @@ public class CustomFont {
         int width = 0;
         int nx = x;
 
-        ScaledResolution sr = new ScaledResolution(mcInstance, mcInstance.displayWidth, mcInstance.displayHeight);
+        ScaledResolution sr = new ScaledResolution(mcInstance);
         // TODO : Fix this, kinda
         boolean loadExtraGlyphs = false;
 
@@ -355,42 +355,9 @@ public class CustomFont {
         if(loadExtraGlyphs) {
             this.loadExtraGlyphs();
         }
-        /*
-        char[] chars = text.toCharArray();
-        for (char c : chars) {
-            int ic = (int) c;
 
-            if(!(ic > 31 && ic < 256)) {
-                // System.out.println("Getting non-vanilla char for "+ic);
-                vanilla = false;
-                if (text.length() > 0)
-                    text = text.substring(0, cto) + " " + text.substring(cto + 1);
-                else
-                    text = "";
+        font.drawString(nx, y, text, getSlickColorFromRGB(color));
 
-                if (cto > 0) {
-                    font.drawString(nx, y, text.substring(cfrom, cto), getSlickColorFromRGB(color));
-                    nx += font.getWidth(text.substring(cfrom, cto));
-                    cfrom = cto + 1;
-                }
-                GlStateManager.translate(0.0F, (float) (sr.getScaledHeight() - 30), 0.0F);
-
-                fontRenderer.drawString(c + "", nx / sr.getScaleFactor(), (y / sr.getScaleFactor()) + 1, color);
-                width += fontRenderer.getCharWidth(c);
-                nx += width * sr.getScaleFactor();
-                GlStateManager.translate(0.0F, mcInstance.displayHeight - (48 * sr.getScaleFactor()), 0.0F);
-            }
-
-            cto++;
-        }
-        if(!vanilla && cfrom != cto) {
-            if(!text.trim().equals(""))
-                font.drawString(nx, y, text.substring(cfrom), getSlickColorFromRGB(color));
-        }
-        if (vanilla) {
-            if(!text.trim().equals("")) */
-                font.drawString(nx, y, text, getSlickColorFromRGB(color));
-        // }
         return width>0?width / sr.getScaleFactor():0;
     }
 
@@ -479,7 +446,7 @@ public class CustomFont {
         if (text == null) {
             return 0;
         } else {
-            text = EnumChatFormatting.getTextWithoutFormattingCodes(text);
+            text = ChatFormatting.stripFormatting(text);
             return font_toDraw.getWidth(text);
         }
     }
@@ -520,17 +487,13 @@ public class CustomFont {
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         for(CustomString cs : customStringList) {
-            if(cs.getChatString() == null || EnumChatFormatting.getTextWithoutFormattingCodes(cs.getChatString()).trim().equals("")) continue;
+            if(cs.getChatString() == null || ChatFormatting.stripFormatting(cs.getChatString()).trim().equals("")) continue;
 
             if(cs.hasShadow())
                 this.drawStringWithShadow(scaledResolution, cs.getChatString(), cs.getX(), cs.getY(), cs.getColor());
             else
                 this.drawString(cs.getChatString(), cs.getX(), cs.getY(), cs.getColor());
         }
-
-
-        GlStateManager.bindTexture(0); // Slick doesn't integrate with our GlStateManager!
-        GlStateManager.resetColor();   // Slick doesn't integrate with our GlStateManager!
 
         resetMinecraftRendering(scaledResolution);
 
