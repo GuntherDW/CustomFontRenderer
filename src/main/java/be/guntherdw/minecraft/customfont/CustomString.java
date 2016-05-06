@@ -1,6 +1,6 @@
 package be.guntherdw.minecraft.customfont;
 
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.text.ITextComponent;
 
 /**
  * @author GuntherDW
@@ -12,10 +12,10 @@ public class CustomString {
 
     private boolean shadow;
 
-    private IChatComponent chatComponent;
+    private ITextComponent chatComponent;
     private String chatText;
 
-    public CustomString(IChatComponent chatComponent, int x, int y, boolean shadow, int color) {
+    public CustomString(ITextComponent chatComponent, int x, int y, boolean shadow, int color) {
         this.chatComponent = chatComponent;
         this.y = y;
         this.x = x;
@@ -47,13 +47,13 @@ public class CustomString {
         return y;
     }
 
-    public IChatComponent getChatComponent() {
+    public ITextComponent getChatComponent() {
         return chatComponent;
     }
 
     public String getChatString() {
         if(chatComponent != null)
-            return chatComponent.getUnformattedTextForChat();
+            return chatComponent.getUnformattedComponentText();
         else
             return chatText;
     }

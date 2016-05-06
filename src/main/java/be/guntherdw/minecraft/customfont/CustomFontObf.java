@@ -9,7 +9,7 @@ public class CustomFontObf extends Obf {
 
     public static final CustomFontObf   persistantChatGui   = new CustomFontObf("field_73840_e",  "l",    "persistantChatGUI");
     public static final CustomFontObf           colorCode   = new CustomFontObf("field_78285_g",  "f",    "colorCode");
-    public static final CustomFontObf       chatcomponents  = new CustomFontObf("field_146253_i", "i",    "field_146253_i");
+    public static final CustomFontObf       chatcomponents  = new CustomFontObf("field_146253_i", "i",    "drawnChatLines");
     public static final CustomFontObf           inputField  = new CustomFontObf("field_146415_a", "a",    "inputField");
 
     /**

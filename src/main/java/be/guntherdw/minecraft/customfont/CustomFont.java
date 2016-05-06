@@ -261,12 +261,10 @@ public class CustomFont {
                             x += newX;
 
                         if(strikethroughStyle) {
-                            // enableDefaults();
                             GlStateManager.disableBlend();
                             int hy = y + (font_toDraw.getLineHeight()/2);
                             this.drawRect(ox, hy, x, hy + 2, addAlpha(color, 255));
                             GlStateManager.enableBlend();
-                            // disableDefaults();
                         }
 
                         if (underlineStyle) {

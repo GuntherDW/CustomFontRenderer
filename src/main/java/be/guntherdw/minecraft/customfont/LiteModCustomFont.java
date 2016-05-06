@@ -10,8 +10,8 @@ import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 
 import java.awt.*;
 import java.io.*;
@@ -204,7 +204,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
 
     protected void addChat(String message) {
         if (minecraft != null && minecraft.ingameGUI.getChatGUI() != null) {
-            minecraft.ingameGUI.getChatGUI().printChatMessage(ChatUtilities.convertLegacyCodes(new ChatComponentText("[CFR] §6" + message)));
+            minecraft.ingameGUI.getChatGUI().printChatMessage(ChatUtilities.convertLegacyCodes(new TextComponentString("[CFR] §6" + message)));
         }
     }
 
@@ -321,6 +321,16 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
                     addChat("/cf help : Show CustomFontRenderer help");
                     addChat("/cf reset : Reset settings to their default values.");
 
+                } else if(command.equalsIgnoreCase("test")) {
+                    addChat("§0§0§2§e§f§cMotd: §fWelkom op de TweakCraft server!");
+                    addChat("§bVoor buildrights: http://www.tweakcraft.net");
+                    addChat("§cRegels: ");
+                    addChat("§c- §bDupen §f/ §bSpeedhack §f/ §bFlying §f/ §bX-Ray §c == BAN");
+                    addChat("§c- Niets jatten, slopen, niet lopen kloten!");
+                    addChat("l §nUnderline test");
+                    addChat("l §lFat test");
+                    addChat("l §oItalic test");
+                    
                 }
             } else {
                 addChat("§6Usage :");
@@ -333,23 +343,23 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
 
     private void recreateChatWindow() {
         GuiIngame ingameGUI = minecraft.ingameGUI;
-        List<IChatComponent> components;
+        List<ITextComponent> components;
 
         GuiNewChat chatGUI = ingameGUI.getChatGUI();
         if(!(chatGUI instanceof CustomFontChatGui)) {
-            components = new ArrayList<IChatComponent>();
+            components = new ArrayList<ITextComponent>();
             for(ChatLine chatLine : PrivateFieldsCustomFont.chatcomponents.get(chatGUI)) {
                 components.add(chatLine.getChatComponent());
             }
         } else {
-            components = new ArrayList<IChatComponent>();
+            components = new ArrayList<ITextComponent>();
             components.addAll(((CustomFontChatGui) chatGUI).getReceived_lines());
         }
         List<String> sentMessages = chatGUI.getSentMessages();
 
         chatGui = new CustomFontChatGui(minecraft, customFont);
         PrivateFieldsCustomFont.guiNewChat.setFinal(ingameGUI, chatGui);
-        chatGui.redrawChat(components.toArray(new IChatComponent[components.size()]));
+        chatGui.redrawChat(components.toArray(new ITextComponent[components.size()]));
         for(String s : sentMessages)
             chatGui.addToSentMessages(s);
 

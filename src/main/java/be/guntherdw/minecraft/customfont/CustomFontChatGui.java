@@ -33,8 +33,9 @@ public class CustomFontChatGui extends GuiNewChat {
      * Chat lines to be displayed in the chat box
      */
     private final List<ChatLine> chatLines = Lists.newArrayList();
+    private final List<ChatLine> drawnChatLines = Lists.newArrayList();
+
     private final List<ITextComponent> received_lines = Lists.newArrayList();
-    private final List<ChatLine> field_146253_i = Lists.newArrayList();
 
     private int scrollPos;
     private boolean isScrolled;
@@ -59,9 +60,9 @@ public class CustomFontChatGui extends GuiNewChat {
         this.customChat = true;
     }
 
-    public void redrawChat(TextComponentString[] components) {
+    public void redrawChat(ITextComponent[] components) {
         // int id = 1;
-        for(TextComponentString component : components) {
+        for(ITextComponent component : components) {
             this.addToReceivedLinesWithoutLog(component);
             // id++;
         }
@@ -77,7 +78,7 @@ public class CustomFontChatGui extends GuiNewChat {
             int lineCount = this.getLineCount();
             boolean isChatOpen = false;
             int amountOfShownLines = 0;
-            int chatLinesSize = this.field_146253_i.size();
+            int chatLinesSize = this.drawnChatLines.size();
             float chatOpacity = this.mc.gameSettings.chatOpacity * 0.9F + 0.1F;
 
             ScaledResolution scaledResolution = new ScaledResolution(mc);
@@ -99,8 +100,8 @@ public class CustomFontChatGui extends GuiNewChat {
                 int var11;
                 int var14;
 
-                for (var9 = 0; var9 + this.scrollPos < this.field_146253_i.size() && var9 < lineCount; ++var9) {
-                    ChatLine chatLine = this.field_146253_i.get(var9 + this.scrollPos);
+                for (var9 = 0; var9 + this.scrollPos < this.drawnChatLines.size() && var9 < lineCount; ++var9) {
+                    ChatLine chatLine = this.drawnChatLines.get(var9 + this.scrollPos);
 
                     if (chatLine != null) {
                         var11 = p_146230_1_ - chatLine.getUpdatedCounter();
@@ -183,7 +184,7 @@ public class CustomFontChatGui extends GuiNewChat {
      */
     @Override
     public void clearChatMessages() {
-        this.field_146253_i.clear();
+        this.drawnChatLines.clear();
         this.chatLines.clear();
         this.sentMessages.clear();
     }
@@ -223,7 +224,7 @@ public class CustomFontChatGui extends GuiNewChat {
         // TODO : Get the colors that were unsolved on the last line and re-apply
 
         for (int var9 = 0; var9 < var8.size(); ++var9) {
-            TextComponentString var10 = (TextComponentString) var8.get(var9);
+            ITextComponent var10 = var8.get(var9);
             String var11 = var10.getUnformattedComponentText();
             boolean var12 = false;
             String var14;
@@ -232,7 +233,7 @@ public class CustomFontChatGui extends GuiNewChat {
                 int var13 = var11.indexOf(10);
                 var14 = var11.substring(var13 + 1);
                 var11 = var11.substring(0, var13 + 1);
-                TextComponentString var15 = new TextComponentString(var14);
+                ITextComponent var15 = new TextComponentString(var14);
                 var15.setStyle(var10.getStyle().createShallowCopy());
                 var8.add(var9 + 1, var15);
                 var12 = true;
@@ -317,7 +318,7 @@ public class CustomFontChatGui extends GuiNewChat {
         boolean var7 = this.getChatOpen();
         TextComponentString var9;
 
-        for (Iterator var8 = var6.iterator(); var8.hasNext(); this.field_146253_i.add(0, new ChatLine(p_146237_3_, var9, p_146237_2_))) {
+        for (Iterator var8 = var6.iterator(); var8.hasNext(); this.drawnChatLines.add(0, new ChatLine(p_146237_3_, var9, p_146237_2_))) {
             var9 = (TextComponentString) var8.next();
 
             if (var7 && this.scrollPos > 0) {
@@ -326,8 +327,8 @@ public class CustomFontChatGui extends GuiNewChat {
             }
         }
 
-        while (this.field_146253_i.size() > amtOfChat) {
-            this.field_146253_i.remove(this.field_146253_i.size() - 1);
+        while (this.drawnChatLines.size() > amtOfChat) {
+            this.drawnChatLines.remove(this.drawnChatLines.size() - 1);
         }
 
         if (!p_146237_4_) {
@@ -341,7 +342,7 @@ public class CustomFontChatGui extends GuiNewChat {
 
     @Override
     public void refreshChat() {
-        this.field_146253_i.clear();
+        this.drawnChatLines.clear();
         this.resetScroll();
 
         for (int var1 = this.chatLines.size() - 1; var1 >= 0; --var1) {
@@ -383,7 +384,7 @@ public class CustomFontChatGui extends GuiNewChat {
     @Override
     public void scroll(int p_146229_1_) {
         this.scrollPos += p_146229_1_;
-        int var2 = this.field_146253_i.size();
+        int var2 = this.drawnChatLines.size();
 
         if (this.scrollPos > var2 - this.getLineCount()) {
             this.scrollPos = var2 - this.getLineCount();
@@ -413,13 +414,13 @@ public class CustomFontChatGui extends GuiNewChat {
                 var7 = MathHelper.floor_float((float) var7 / chatScale);
 
                 if (var6 >= 0 && var7 >= 0) {
-                    int var8 = Math.min(this.getLineCount(), this.field_146253_i.size());
+                    int var8 = Math.min(this.getLineCount(), this.drawnChatLines.size());
 
                     if (var6 <= MathHelper.floor_float((float) (this.getChatWidth()*scaleFactor) / this.getChatScale()) && var7 < (customFont.getFontHeight()*scaleFactor) * var8 + var8) {
                         int var9 = var7 / (customFont.getFontHeight() / scaleFactor) + this.scrollPos;
 
-                        if (var9 >= 0 && var9 < this.field_146253_i.size()) {
-                            ChatLine var10 = this.field_146253_i.get(var9);
+                        if (var9 >= 0 && var9 < this.drawnChatLines.size()) {
+                            ChatLine var10 = this.drawnChatLines.get(var9);
                             int var11 = 0;
                             Iterator var12 = var10.getChatComponent().iterator();
 
@@ -453,13 +454,13 @@ public class CustomFontChatGui extends GuiNewChat {
                 var7 = MathHelper.floor_float((float) var7 / chatScale);
 
                 if (var6 >= 0 && var7 >= 0) {
-                    int var8 = Math.min(this.getLineCount(), this.field_146253_i.size());
+                    int var8 = Math.min(this.getLineCount(), this.drawnChatLines.size());
 
                     if (var6 <= MathHelper.floor_float((float) this.getChatWidth() / this.getChatScale()) && var7 < this.mc.fontRendererObj.FONT_HEIGHT * var8 + var8) {
                         int var9 = var7 / this.mc.fontRendererObj.FONT_HEIGHT + this.scrollPos;
 
-                        if (var9 >= 0 && var9 < this.field_146253_i.size()) {
-                            ChatLine var10 = this.field_146253_i.get(var9);
+                        if (var9 >= 0 && var9 < this.drawnChatLines.size()) {
+                            ChatLine var10 = this.drawnChatLines.get(var9);
                             int var11 = 0;
                             Iterator var12 = var10.getChatComponent().iterator();
 
@@ -504,7 +505,7 @@ public class CustomFontChatGui extends GuiNewChat {
      */
     @Override
     public void deleteChatLine(int p_146242_1_) {
-        Iterator var2 = this.field_146253_i.iterator();
+        Iterator var2 = this.drawnChatLines.iterator();
         ChatLine var3;
 
         while (var2.hasNext()) {
