@@ -15,7 +15,8 @@ import sun.font.Font2D;
 import sun.font.Font2DHandle;
 import sun.font.PhysicalFont;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -299,7 +300,7 @@ public class CustomFont {
         if (shadow) {
             color = (color & 16579836) >> 2 | color & -16777216;
         }
-        font.drawString(x, y, text, getSlickColorFromRGB(color));
+        font.drawString(x, y, text, color);// getSlickColorFromRGB(color));
 
     }
 
@@ -330,11 +331,6 @@ public class CustomFont {
             color = (color & 16579836) >> 2 | color & -16777216;
         }
 
-        boolean vanilla = true;
-
-        int cfrom = 0;
-        int cto = 0;
-
         int width = 0;
         int nx = x;
 
@@ -354,7 +350,8 @@ public class CustomFont {
             this.loadExtraGlyphs();
         }
 
-        font.drawString(nx, y, text, getSlickColorFromRGB(color));
+        // font.drawString(nx, y, text, getSlickColorFromRGB(color));
+        font.drawString(nx, y, text, color);
 
         return width>0?width / sr.getScaleFactor():0;
     }

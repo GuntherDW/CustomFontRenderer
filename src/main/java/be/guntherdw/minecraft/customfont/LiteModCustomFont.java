@@ -10,11 +10,18 @@ import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 
-import java.awt.*;
-import java.io.*;
+import java.awt.Font;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +47,8 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
     protected Font toReplaceFont = null;
 
     private File configPath;
+
+    private boolean debug = false;
 
     private CustomFontSelectionDialog customFontSelectionDialog = new CustomFontSelectionDialog();
 
@@ -76,6 +85,18 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
                 replacedChat = true;
                 addChat("CustomFontRenderer version "+getVersion()+" loaded. Type /cf help for help!");
             }
+        }
+
+        if(debug) {
+            // Render the text overlay
+            int glImageID = customFont.getFont().GLTextureID;
+            GlStateManager.bindTexture(glImageID);
+            GlStateManager.enableBlend();
+            GlStateManager.enableAlpha();
+            GlStateManager.color(1f, 1f, 1f, 1f);
+            Minecraft.getMinecraft().ingameGUI.drawTexturedModalRect(2, 2, 0, 0, 256, 256);
+            GlStateManager.disableAlpha();
+            GlStateManager.disableBlend();
         }
     }
 
@@ -330,7 +351,14 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
                     addChat("l §nUnderline test");
                     addChat("l §lFat test");
                     addChat("l §oItalic test");
-                    
+                    addChat("l Random unicode letters :");
+                    addChat("ëâùéµù");
+                    addChat("¡ ¢ £ ¤ ¥ ¦ § ¨ © ª « ¬ \u00AD ® ¯ ° ± ² ³ ´ µ ¶ · ¸ ¹ º » ¼ ½ ¾ ¿");
+                    addChat("À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ð Ñ Ò Ó Ô Õ Ö × Ø Ù Ú Û Ü Ý Þ ß ");
+                    addChat("à á â ã ä å æ ç è é ê ë ì í î ï ð ñ ò ó ô õ ö ÷ ø ù ú û ü ý þ ÿ");
+                } else if(command.equals("debug")) {
+                    this.debug = !this.debug;
+                    addChat("Debugging mode " + (this.debug?"enabled":"disabled"));
                 }
             } else {
                 addChat("§6Usage :");
