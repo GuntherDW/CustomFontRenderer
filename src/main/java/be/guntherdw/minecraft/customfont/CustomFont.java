@@ -2,7 +2,6 @@ package be.guntherdw.minecraft.customfont;
 
 import be.guntherdw.minecraft.customfont.font.ColorEffect;
 import be.guntherdw.minecraft.customfont.font.UnicodeFont;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
@@ -10,6 +9,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.opengl.GL11;
 import sun.font.Font2D;
 import sun.font.Font2DHandle;
@@ -19,9 +19,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 public class CustomFont {
 
@@ -32,8 +30,6 @@ public class CustomFont {
     private UnicodeFont font_toDraw;
 
     public Random fontRandom = new Random();
-
-    public Set<Character> extraChars = new HashSet<Character>();
 
     private java.util.List<CustomString> customStringList = new ArrayList<CustomString>();
 
@@ -304,22 +300,6 @@ public class CustomFont {
 
     }
 
-    public void addGlyph(char c) {
-        font.addGlyphs(c, c);
-        font_bold.addGlyphs(c, c);
-        font_italic.addGlyphs(c, c);
-        font_italic_bold.addGlyphs(c, c);
-        font_toDraw.addGlyphs(c, c);
-    }
-
-    public void loadExtraGlyphs() {
-        try { font.loadGlyphs(); } catch (Exception e) {}
-        try { font_bold.loadGlyphs(); } catch (Exception e) {}
-        try { font_italic.loadGlyphs(); } catch (Exception e) {}
-        try { font_italic_bold.loadGlyphs(); } catch (Exception e) {}
-        try { font_toDraw.loadGlyphs(); } catch (Exception e) {}
-    }
-
     public int getAlpha() {
         float chatOpacity = this.mcInstance.gameSettings.chatOpacity * 0.9F + 0.1F;
 
@@ -335,22 +315,6 @@ public class CustomFont {
         int nx = x;
 
         ScaledResolution sr = new ScaledResolution(mcInstance);
-        // TODO : Fix this, kinda
-        boolean loadExtraGlyphs = false;
-
-        for(char c : text.toCharArray()) {
-            if(c > 255 && !extraChars.contains(c)) {
-                // System.out.println("Adding extra character : "+c);
-                extraChars.add(c);
-                loadExtraGlyphs = true;
-                this.addGlyph(c);
-            }
-        }
-        if(loadExtraGlyphs) {
-            this.loadExtraGlyphs();
-        }
-
-        // font.drawString(nx, y, text, getSlickColorFromRGB(color));
         font.drawString(nx, y, text, color);
 
         return width>0?width / sr.getScaleFactor():0;
@@ -441,7 +405,7 @@ public class CustomFont {
         if (text == null) {
             return 0;
         } else {
-            text = ChatFormatting.stripFormatting(text);
+            text = TextFormatting.getTextWithoutFormattingCodes(text);
             return font_toDraw.getWidth(text);
         }
     }
@@ -482,7 +446,7 @@ public class CustomFont {
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         for(CustomString cs : customStringList) {
-            if(cs.getChatString() == null || ChatFormatting.stripFormatting(cs.getChatString()).trim().equals("")) continue;
+            if(cs.getChatString() == null || TextFormatting.getTextWithoutFormattingCodes(cs.getChatString()).trim().equals("")) continue;
 
             if(cs.hasShadow())
                 this.drawStringWithShadow(scaledResolution, cs.getChatString(), cs.getX(), cs.getY(), cs.getColor());

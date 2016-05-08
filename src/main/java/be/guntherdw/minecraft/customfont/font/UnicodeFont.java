@@ -53,7 +53,7 @@ public class UnicodeFont {
         }
 
         if(c > size) {
-            System.out.println("Growing array!");
+            // System.out.println("Growing array!");
             Glyph[] tmp = new Glyph[(int) c + 64];
             System.arraycopy(glyphs, 0, tmp, 0, glyphs.length);
             glyphs = tmp;

@@ -1,7 +1,6 @@
 package be.guntherdw.minecraft.customfont;
 
 import com.google.common.collect.Lists;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.FontRenderer;
@@ -14,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -209,11 +209,11 @@ public class CustomFontChatGui extends GuiNewChat {
     }
 
     public static String removeFormattingCodes(String string) {
-        return ChatFormatting.stripFormatting(string);
+        return TextFormatting.getTextWithoutFormattingCodes(string);
     }
 
     public static String removeTextColorsIfConfigured(String p_178909_0_, boolean p_178909_1_) {
-        return !p_178909_1_ && !Minecraft.getMinecraft().gameSettings.chatColours ? ChatFormatting.stripFormatting(p_178909_0_) : p_178909_0_;
+        return !p_178909_1_ && !Minecraft.getMinecraft().gameSettings.chatColours ? TextFormatting.getTextWithoutFormattingCodes(p_178909_0_) : p_178909_0_;
     }
 
     public List<ITextComponent> getChatComponents(ScaledResolution scaledResolution, ITextComponent chatComponent, int maxWidth, FontRenderer fontRenderer, boolean p_178908_3_, boolean p_178908_4_) {
