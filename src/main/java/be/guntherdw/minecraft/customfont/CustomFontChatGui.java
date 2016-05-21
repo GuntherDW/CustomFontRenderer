@@ -73,7 +73,7 @@ public class CustomFontChatGui extends GuiNewChat {
     }
 
     @Override
-    public void drawChat(int p_146230_1_) {
+    public void drawChat(int updateCounter) {
         if (this.mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
             int lineCount = this.getLineCount();
             boolean isChatOpen = false;
@@ -104,7 +104,7 @@ public class CustomFontChatGui extends GuiNewChat {
                     ChatLine chatLine = this.drawnChatLines.get(var9 + this.scrollPos);
 
                     if (chatLine != null) {
-                        var11 = p_146230_1_ - chatLine.getUpdatedCounter();
+                        var11 = updateCounter - chatLine.getUpdatedCounter();
 
                         if (var11 < 200 || isChatOpen) {
                             double var12 = (double) var11 / 200.0D;

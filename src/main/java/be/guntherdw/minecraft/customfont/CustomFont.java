@@ -27,7 +27,7 @@ public class CustomFont {
     private UnicodeFont font_italic;
     private UnicodeFont font_bold;
     private UnicodeFont font_italic_bold;
-    private UnicodeFont font_toDraw;
+    public UnicodeFont font_toDraw;
 
     public Random fontRandom = new Random();
 

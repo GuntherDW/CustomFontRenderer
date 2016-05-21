@@ -6,23 +6,26 @@ import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.ITextureObject;
+import org.lwjgl.opengl.GL11;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.font.TextAttribute;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author GuntherDW
  */
 public class UnicodeFont {
 
-    protected final int IMAGE_MAX_SIZE = 1024;
+    public static int IMAGE_MAX_SIZE = -1;
 
     private List<ColorEffect> effects;
     private Font font;
@@ -33,13 +36,16 @@ public class UnicodeFont {
     protected FontMetrics fontMetrics;
 
     private final String resLocation = "cf:font";
-    private final int paddingX = 4;
-    private final int paddingY = 4;
+    protected final int paddingX = 4;
+    protected final int paddingY = 4;
 
-    private ITextureObject ito = null;
-    public int GLTextureID;
+    public int divider = 32;
 
-    private Glyph[] glyphs;
+    public List<DynamicTexture> dynamicTextures;
+    public int currentGLTextureID;
+
+    /** TODO : Set to private when done debugging **/
+    public Glyph[] glyphs;
 
     /* private int xPos[] = new int[256];
     private int yPos[] = new int[256]; */
@@ -69,7 +75,15 @@ public class UnicodeFont {
     }
 
     public UnicodeFont(Font awtFont, int size, boolean bold, boolean italic) {
+
+        if(UnicodeFont.IMAGE_MAX_SIZE == -1) {
+            System.out.println("[CFR] Getting max texture size.");
+            UnicodeFont.IMAGE_MAX_SIZE = Math.min(GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE), 1024);
+            System.out.println("[CFR] Set maximum size to "+UnicodeFont.IMAGE_MAX_SIZE);
+        }
+
         this.effects = new ArrayList<ColorEffect>();
+        this.dynamicTextures = new ArrayList<DynamicTexture>();
 
         Map attributeMap = awtFont.getAttributes();
         this.bold = bold;
@@ -78,7 +92,7 @@ public class UnicodeFont {
         this.size = size;
         this.glyphs = new Glyph[256];
 
-        attributeMap.put(TextAttribute.SIZE, new Float(size));
+        // attributeMap.put(TextAttribute.SIZE, new Float(size).floatValue());
         attributeMap.put(TextAttribute.WEIGHT,    bold ? TextAttribute.WEIGHT_BOLD     : TextAttribute.WEIGHT_REGULAR);
         attributeMap.put(TextAttribute.POSTURE, italic ? TextAttribute.POSTURE_OBLIQUE : TextAttribute.POSTURE_REGULAR);
 
@@ -89,11 +103,6 @@ public class UnicodeFont {
     private String getResourceLocation() {
         return resLocation + "/" + font.getFontName() + (font.isBold() ? "-bold" : "") + (font.isItalic() ? "-italic" : "");
     }
-
-    /* private void generateResourceLocation(BufferedImage bufferedImage) {
-        ResourceLocation newResourceLocation = new ResourceLocation(resLocation);
-        Minecraft.getMinecraft().getTextureManager().
-    } */
 
     /**
      * Load the usual ASCII characters into memory.
@@ -111,55 +120,87 @@ public class UnicodeFont {
      * Throws exception when anything went wrong.
      */
     public void loadGlyphs() {
+
+        /** Destroy the old GLTextureID's first **/
+        for(DynamicTexture dynamicTexture : dynamicTextures) {
+            dynamicTexture.deleteGlTexture();
+        }
+        dynamicTextures.clear();
+        currentGLTextureID = -1;
+
         BufferedImage bufferedImage = new BufferedImage(IMAGE_MAX_SIZE, IMAGE_MAX_SIZE, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = (Graphics2D) bufferedImage.getGraphics();
-        /* graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        graphics.setFont(this.font);
+        this.fontMetrics = graphics.getFontMetrics();
+
+        this.divider = calcDivider(fontMetrics);
 
         graphics.setColor(new Color(255, 255, 255, 0));
         graphics.fillRect(0, 0, IMAGE_MAX_SIZE, IMAGE_MAX_SIZE);
         graphics.setColor(Color.white);
 
-        fontMetrics = graphics.getFontMetrics();
-
-        int xPos = 2;
-        int yPos = 2 - fontMetrics.getMaxDescent();
-        for (int c = 32; c <= 126; c++) {
-            graphics.drawString((char) c + "", xPos, yPos + fontMetrics.getAscent());
-            this.xPos[c] = xPos;
-            this.yPos[c] = yPos;
-            xPos += getWidth((char) c + "") + paddingX;
-            if (xPos >= (IMAGE_MAX_SIZE - paddingX) - fontMetrics.getMaxAdvance()) {
-                xPos = 2;
-                yPos += fontMetrics.getMaxAscent() + fontMetrics.getMaxDescent() + size / 2;
-            }
-        } */
+        Set<Integer> tempGlyphIDs = new HashSet<Integer>();
 
         int xPos = 0;
         int yPos = 0;
-        for(Glyph glyph : glyphs) {
-            if(glyph != null) {
-                if(glyph.isMissing) glyph.renderGlyph(this);
+
+        boolean draw_box = false;
+
+        for(int current = 0; current < glyphs.length; current++) {
+            Glyph glyph = glyphs[current];
+
+            if (glyph != null) {
+                glyph = glyphs[current];
+                if (glyph.isMissing) glyph.renderGlyph(this);
                 graphics.drawImage(glyph.image, null, xPos, yPos);
                 glyph.xPos = xPos;
                 glyph.yPos = yPos;
+
+                if(draw_box) {
+                    graphics.drawLine(glyph.xPos, glyph.yPos, glyph.xPos, glyph.yPos + divider);
+                    graphics.drawLine(glyph.xPos, glyph.yPos, glyph.xPos + divider, glyph.yPos);
+                    graphics.drawLine(glyph.xPos + divider, glyph.yPos + divider, glyph.xPos, glyph.yPos + divider);
+                    graphics.drawLine(glyph.xPos + divider, glyph.yPos + divider, glyph.xPos + divider, glyph.yPos);
+                }
             }
-            xPos += 32;
-            // yPos += 32;
-            if(xPos == IMAGE_MAX_SIZE) {
-                yPos += 32;
+
+            xPos += divider;
+            if (xPos == IMAGE_MAX_SIZE) {
+                yPos += divider;
                 xPos = 0;
+            }
+
+            // Either last or full page
+            if(current + 1 == glyphs.length || (xPos == IMAGE_MAX_SIZE && yPos == IMAGE_MAX_SIZE)) {
+                ITextureObject ito = new DynamicTexture(bufferedImage);
+                int tempTextureID = ito.getGlTextureId();
+
+                for(Integer i : tempGlyphIDs) glyphs[i].glTextureID = tempTextureID;
+                tempGlyphIDs.clear();
+
+                xPos = 0;
+                yPos = 0;
+                if(!(current + 1 == glyphs.length)) { /** Clear the image **/
+                    graphics.setColor(new Color(255, 255, 255, 0));
+                    graphics.fillRect(0, 0, IMAGE_MAX_SIZE, IMAGE_MAX_SIZE);
+                    graphics.setColor(Color.white);
+                }
+            } else {
+                if(glyph != null) tempGlyphIDs.add(glyph.charcode);
             }
         }
 
-        // ResourceLocation rl = new ResourceLocation(getResourceLocation());
-        if(ito != null) ((DynamicTexture) ito).deleteGlTexture();
+    }
 
-        ito = new DynamicTexture(bufferedImage);
-        // ((DynamicTexture) ito).loadTexture();
-        GLTextureID = ito.getGlTextureId();
-        // rl.
-        // Minecraft.getMinecraft().getTextureManager().loadTexture(rl, bufferedImage);
+    private int calcDivider(FontMetrics fontMetrics) {
+        int rem = font.getSize();
+        int size = 32;
+
+        while(rem + ( paddingY * 2 ) > size + paddingY) {
+            size *= 2;
+            rem -= size;
+        }
+
+        return size;
     }
 
     /**
@@ -184,7 +225,17 @@ public class UnicodeFont {
      * @return The width of the string in pixels
      */
     public int getWidth(String string) {
-        return fontMetrics.stringWidth(string);
+        // return fontMetrics.stringWidth(string);
+        // char[] chars = string.toCharArray();
+        //
+        // return (int) Math.ceil(fontMetrics.getStringBounds(string, null).getWidth()) + paddingX;
+        char[] chars = string.toCharArray();
+        int w = 0;
+        for(char c : chars) {
+            if(glyphs[c] != null)
+                w += glyphs[c].width;
+        }
+        return w;
     }
 
     /**
@@ -192,7 +243,8 @@ public class UnicodeFont {
      * @return the height in pixels
      */
     public int getLineHeight() {
-        return fontMetrics.getDescent() + fontMetrics.getAscent() + fontMetrics.getLeading();
+        // return fontMetrics.getDescent() + fontMetrics.getAscent() + fontMetrics.getLeading();
+        return (int) Math.ceil(font.getSize2D());
     }
 
     /**
@@ -207,10 +259,6 @@ public class UnicodeFont {
 
         GuiIngame inGameGUI = Minecraft.getMinecraft().ingameGUI;
 
-        GlStateManager.bindTexture(GLTextureID);
-
-        /* int colorInt = color.getRGB();
-        int alphaInt = color.getAlpha(); */
         float red =   (float)(color >> 16 & 0xff) / 255F;
         float green = (float)(color >>  8 & 0xff) / 255F;
         float blue =  (float)(color       & 0xff) / 255F;
@@ -225,33 +273,28 @@ public class UnicodeFont {
     }
 
     private void drawChar(Gui gui, int x, int y, char c) {
-        Rectangle2D r2d = fontMetrics.getStringBounds(c+"", null);
-        // if(IMAGE_MAX_SIZE == 256) {
-        //  gui.drawTexturedModalRect(x, y, xPos[c], yPos[c], (int) r2d.getWidth(), (int) (r2d.getHeight() + fontMetrics.getMaxDescent()));
+
         if(glyphs[c] == null) {
             this.addGlyphs(c, c);
             this.loadGlyphs();
         }
 
-        gui.drawModalRectWithCustomSizedTexture(x, y, glyphs[c].xPos, glyphs[c].yPos, (int) Math.ceil(glyphs[c].width) + paddingX, (int) (r2d.getHeight() + fontMetrics.getMaxDescent()), IMAGE_MAX_SIZE, IMAGE_MAX_SIZE);
+        /**
+         * If the glyph is on another Texture ID than the current, bind it first
+         */
+        if(glyphs[c].glTextureID != this.currentGLTextureID) {
+            GlStateManager.bindTexture(glyphs[c].glTextureID);
+        }
 
-        /* } else {
-            Tessellator tes = Tessellator.getInstance();
-            VertexBuffer vb = tes.getBuffer();
-            int zLevel = PrivateFieldsCustomFont.zLevel.get(gui);
-            vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-            vb.pos(x, y, zLevel).endVertex();
-        */
-            /*
-            VertexBuffer lvt_10_1_ = lvt_9_1_.getBuffer();
-            lvt_10_1_.begin(7, DefaultVertexFormats.POSITION_TEX);
-            lvt_10_1_.pos((double) (x +     0), (double) (y + height), (double) this.zLevel).tex((double) ((float) (texPosX +     0) * lvt_7_1_), (double) ((float) (texPosY + height) * lvt_8_1_)).endVertex();
-            lvt_10_1_.pos((double) (x + width), (double) (y + height), (double) this.zLevel).tex((double) ((float) (texPosX + width) * lvt_7_1_), (double) ((float) (texPosY + height) * lvt_8_1_)).endVertex();
-            lvt_10_1_.pos((double) (x + width), (double) (y +      0), (double) this.zLevel).tex((double) ((float) (texPosX + width) * lvt_7_1_), (double) ((float) (texPosY +      0) * lvt_8_1_)).endVertex();
-            lvt_10_1_.pos((double) (x +     0), (double) (y +      0), (double) this.zLevel).tex((double) ((float) (texPosX +     0) * lvt_7_1_), (double) ((float) (texPosY +      0) * lvt_8_1_)).endVertex();
-            lvt_9_1_.draw();
-            */
-        //}
+        int startX = (int) (glyphs[c].xPos + (divider / 2) - (glyphs[c].geom.getWidth()  / 2));
+        int startY = (int) (glyphs[c].yPos + (divider / 2) - (glyphs[c].geom.getHeight() / 2));
+
+        // int width  = glyphs[c].width;
+        int width  = divider - paddingX;
+        // int height = (int) glyphs[c].height;
+        int height = divider - paddingY;
+
+        gui.drawModalRectWithCustomSizedTexture(x,  y - (int) (glyphs[c].geom.getHeight() / 4), startX, startY, width, height, IMAGE_MAX_SIZE, IMAGE_MAX_SIZE);
     }
 
 

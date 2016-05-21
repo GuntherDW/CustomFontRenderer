@@ -59,6 +59,7 @@ litemod {
 
 jar {
     from litemod.outputs
+    from zipTree('lib/jfontchooser-1.0.5.jar')
 }
 
 dependencies {

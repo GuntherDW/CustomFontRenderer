@@ -5,14 +5,19 @@ import com.mumfrey.liteloader.Tickable;
 import com.mumfrey.liteloader.ViewportListener;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.util.ChatUtilities;
+import com.mumfrey.liteloader.util.PrivateFields;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.Font;
 import java.io.BufferedReader;
@@ -48,7 +53,7 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
 
     private File configPath;
 
-    private boolean debug = false;
+    private boolean debug = true;
 
     private CustomFontSelectionDialog customFontSelectionDialog = new CustomFontSelectionDialog();
 
@@ -89,12 +94,35 @@ public class LiteModCustomFont implements Tickable, OutboundChatFilter, Viewport
 
         if(debug) {
             // Render the text overlay
-            int glImageID = customFont.getFont().GLTextureID;
+            int glImageID = customFont.getFont().glyphs['c'].glTextureID;
+
             GlStateManager.bindTexture(glImageID);
             GlStateManager.enableBlend();
             GlStateManager.enableAlpha();
             GlStateManager.color(1f, 1f, 1f, 1f);
             Minecraft.getMinecraft().ingameGUI.drawTexturedModalRect(2, 2, 0, 0, 256, 256);
+            /* float zLevel = PrivateFieldsCustomFont.zLevel.get(Minecraft.getMinecraft().ingameGUI);
+
+            for (int x = 0; x < customFont.font_toDraw.IMAGE_MAX_SIZE; x += customFont.font_toDraw.divider) {
+                for (int y = 0; y < customFont.font_toDraw.IMAGE_MAX_SIZE; y += customFont.font_toDraw.divider) {
+                    // System.out.println("x : "+x+"\ty : "+y);
+                    Tessellator tess = Tessellator.getInstance();
+                    VertexBuffer vb = tess.getBuffer();
+
+                    vb.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+
+                    // GlStateManager.color(1, 1, 1, 1);
+                    GlStateManager.glLineWidth(1.0F);
+
+                    vb.pos(x,                                     y, zLevel).endVertex();
+                    vb.pos(customFont.font_toDraw.IMAGE_MAX_SIZE, y, zLevel).endVertex();
+
+                    vb.pos(x,                                     y, zLevel).endVertex();
+                    vb.pos(x, customFont.font_toDraw.IMAGE_MAX_SIZE, zLevel).endVertex();
+
+                    tess.draw();
+                }
+            } */
             GlStateManager.disableAlpha();
             GlStateManager.disableBlend();
         }
